@@ -14,8 +14,8 @@ laplace_fmm2d -I inputfile -O outputfile で実行してください。
 
 -------------
 高速多重極展開は、２次元なら４分木、３次元なら８分木を作って、多重極で、要素のデータを束ねて処理するので、大規模な計算が出来ます。
-![tree1](tree1.png)
-![tree2](tree2.png)
+![tree1](tree1.jpg)
+![tree2](tree2.jpg)
 -----------
-![dispersion](dispersion.png)
-![evaporation](evaporation.png)
+![dispersion](dispersion.jpg)
+![evaporation](evaporation.jpg)
