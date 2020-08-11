@@ -13,6 +13,7 @@ laplace_fmm2d -I inputfile -O outputfile で実行してください。
 たとえば、 laplace2d -I sphere2d.udf -O sphere2d_o.udf のようにです。
 
 -------------
+
 高速多重極展開は、２次元なら４分木、３次元なら８分木を作って、多重極で、要素のデータを束ねて処理するので、大規模な計算が出来ます。
 ![tree1](tree1.jpg)
 ![tree2](tree2.jpg)
