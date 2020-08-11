@@ -1,0 +1,58 @@
+action input:show_mesh(Mesh_id="false|true",Normal_vector="false|true",Evaluation_point="false|true") : \begin
+from numpy import *
+from draw_cube import *
+def outer(a,b):
+	return array([a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]])
+r=$input.vertex[].position
+for i in r:
+	point(i,3)
+face=$input.face[]
+for i in face:
+	r0=array(get(getLocation("Vertex",i[1][0])+".position"))
+	r1=array(get(getLocation("Vertex",i[1][1])+".position"))
+	r2=array(get(getLocation("Vertex",i[1][2])+".position"))
+	polyline(array([r0,r1,r2,r0]).tolist(),3)
+	c=(r0+r1+r2)/3.0
+	if Mesh_id=="true":
+		text(c.tolist(),"%d"%i[0],[0,0,1,1,18])
+	if Normal_vector=="true":
+		n=outer(array(r1)-array(r0),array(r2)-array(r0))
+		n/=sqrt(dot(n,n))
+		line(c.tolist(),(c+n).tolist(),2)
+#draw system
+r=array([[1.0,1.0,0.0],[-1.0,1.0,0.0],[-1.0,-1.0,0.0],
+         [1.0,-1.0,0.0],[1.0,1.0,0.0]])
+center=array($input.system.center)
+size=$input.system.size
+#r*=0.5*size
+#p=[]
+#for i in r:
+#	p.append((center+i).tolist())
+draw_cube_polyline(center,size,1,_udf_)
+#polyline(p,1)
+#draw evaluation point
+if Evaluation_point=="true":
+	r=$input.evaluation_point[].position
+	for i in r:
+		point(i,2)
+\end
+
+action input:show_region_condition():\begin
+from math import *
+from numpy import *
+rc=$input.region_condition[].face[]
+name=$input.region_condition[].name
+type=$input.region_condition[].type
+for i in range(len(rc)):
+	for j in range(len(rc[i])):
+		loc=getLocation("Face",rc[i][j])
+		v=get(loc+".vertex[]")
+		r0=array(get(getLocation("Vertex",v[0])+".position"))
+		r1=array(get(getLocation("Vertex",v[1])+".position"))
+		r2=array(get(getLocation("Vertex",v[2])+".position"))
+		c=(r0+r1+r2)/3.0
+		if type[i]=="phi":
+			point(c.tolist(),3)
+		elif type[i]=="q":
+			point(c.tolist(),1)
+\end

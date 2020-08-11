@@ -1,0 +1,91 @@
+\begin{header}
+\begin{def}
+	EngineType:string;
+	EngineVersion:string;
+	IOType:string;
+	ProjectName:string;
+	Comment:string;
+	Action:string;
+\end{def}
+
+\begin{data}
+	EngineType:"LaplaceFMM3d"
+	EngineVersion:"1"
+	IOType:"INOUT"
+	ProjectName:""
+	Comment:"BEM-FMM for 3 dimensional Laplace system"
+	Action:"LaplaceFMM3d_input.act;LaplaceFMM3d_output.act"
+\end{data}
+\end{header}
+\begin{global_def}
+class Vector3d:{x:double[unit],y:double[unit],z:double[unit]}[unit]
+class Vertex:{id:ID,position:Vector3d}
+class Face:{id:ID,vertex[]:<Vertex,ID>}
+input:{
+	system:{
+		center:Vector3d// center
+		size:double// linear size of system
+	}
+	vertex[]:Vertex
+	face[]:Face
+	region_condition[]:{
+		name:string
+		face[]:<Face,ID>
+		type:select{"phi","q"}
+		phi:double
+		q:double
+	}
+	external_field:{
+		phi:double
+		gradient_phi:Vector3d
+	}
+	evaluation_point[]:{
+		position:Vector3d
+	}
+	fmm:{
+		number_of_faces_per_leaf:int
+		number_of_terms_moments:int
+		number_of_terms_local_expansions:int
+	}
+	bicgstab:{
+		max_iteration:int
+		tolerance:double
+		pre_condition:select{"false","point_Jacobi","block_solution_in_leaf"}
+	}
+	Gauss_Legendre_integral_points_number:select{"1","3","4","7"}
+	//GreenFunction:select{"free","zero_potential_z0","no_flux_z0"}
+	additional_information[]:{
+		item:string
+		value:string
+	}
+}
+
+output:{
+	face[]:{
+		phi:double
+		q:double
+	}// results of boundary element method
+	evaluation_point[]:{
+		phi:double
+		cell:int
+	}
+	cell[]:{
+		generation:int
+		size:double
+		position:Vector3d
+		child[]:int //index of cell
+		adjacent[]:int //index of cell
+		interaction[]:int //index of cell
+		face[]:int // index of edge when cell has no chlid
+	}// tree information 
+	time:double[s]
+	bicgstab:{
+		iteration:int
+		tolerance:double
+	}
+	additional_information[]:{
+		item:string
+		value:string
+	}
+}
+\end{global_def}

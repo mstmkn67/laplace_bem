@@ -1,0 +1,114 @@
+
+action output:show_cell(Line="false|cell_cell|face_cell|evaluation_point_cell") :\begin
+from numpy import *
+from draw_cube import *
+### draw cell ###
+p=$output.cell[].position
+g=$output.cell[].generation
+s=$output.cell[].size
+maxg=max(g)
+for i in range(len(p)):
+	draw_cube_polyline(array(p[i]),s[i],1,_udf_)
+### draw family tree ###
+p=$output.cell[].position
+c=$output.cell[].child[]
+f=$output.cell[].face[]
+g=$output.cell[].generation
+#child
+if Line=="cell_cell":
+	for i in range(len(c)):
+		for j in range(len(c[i])):
+			rp=$output.cell[c[i][j]].position
+			line(p[i],rp,2)
+#face
+if Line =="face_cell":
+	for i in range(len(f)):
+		for j in range(len(f[i])):
+			temp=f[i][j]
+			id0=$input.face[temp].vertex[0]
+			id1=$input.face[temp].vertex[1]
+			id2=$input.face[temp].vertex[2]
+			r0=array(get(getLocation("Vertex",id0)+".position"))
+			r1=array(get(getLocation("Vertex",id1)+".position"))
+			r2=array(get(getLocation("Vertex",id2)+".position"))
+			rp=(r0+r1+r2)/3.0
+			line(p[i],rp.tolist(),2)
+#evaluation
+if Line=="evaluation_point_cell":
+	er=$input.evaluation_point[].position
+	ec=$output.evaluation_point[].cell
+	for i in range(len(er)):
+		gen=$output.cell[ec[i]].generation
+		cr=$output.cell[ec[i]].position
+		line(er[i],cr,2)
+### draw mesh ###
+face=$input.face[]
+#r=$input.vertex[].position
+#for i in r:
+#	point(i,3)
+for i in face:
+	r0=array(get(getLocation("Vertex",i[1][0])+".position"))
+	r1=array(get(getLocation("Vertex",i[1][1])+".position"))
+	r2=array(get(getLocation("Vertex",i[1][2])+".position"))
+	polygon([r0.tolist(),r1.tolist(),r2.tolist()],[1,0,0,0.5])
+	#c=(r0+r1+r2)/3.0
+	#point(c.tolist(),2)
+#r=$input.evaluation_point[]
+#for i in r:
+#	point(i,2)
+\end
+
+action output.cell[]:adjacent_interaction() : \begin
+from numpy import *
+from draw_cube import *
+def draw_cell(cell_list,color):
+	for i in cell_list:
+		rp=$output.cell[i].position
+		si=0.99*$output.cell[i].size
+		draw_cube_polyline(array(rp),si,color,_udf_)
+##
+adja=$self.adjacent[]
+inte=$self.interaction[]
+myself=Location("self").getIndex()
+draw_cell(adja,1)
+draw_cell(inte,3)
+draw_cell(myself,2)
+print("adjacent : blue")
+print("interaction : red")
+print("myself : green")
+##
+#draw mesh
+face=$input.face[]
+for i in face:
+	r0=array(get(getLocation("Vertex",i[1][0])+".position"))
+	r1=array(get(getLocation("Vertex",i[1][1])+".position"))
+	r2=array(get(getLocation("Vertex",i[1][2])+".position"))
+	polyline([r0.tolist(),r1.tolist(),r2.tolist(),r0.tolist()],[0.3,0,0,1])
+	#c=(r0+r1+r2)/3.0
+	#point(c.tolist(),2)
+#r=$input.evaluation_point[]
+#for i in r:
+#	point(i,2)
+\end
+
+action output:show_result() : \begin
+from numpy import *
+def outer(a,b):
+	return array([a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]])
+face=$input.face[].vertex[]
+phi=$output.face[].phi
+q=$output.face[].q
+pmin,pmax=min(phi),max(phi)
+if pmin==pmax:
+	pmin=0.0
+for i in range(len(q)):
+	r0=array(get(getLocation("Vertex",face[i][0])+".position"))
+	r1=array(get(getLocation("Vertex",face[i][1])+".position"))
+	r2=array(get(getLocation("Vertex",face[i][2])+".position"))
+	c=(r0+r1+r2)/3.0
+	n=outer(r1-r0,r2-r0)
+	n/=sqrt(dot(n,n))
+	line(c.tolist(),(c-q[i]*n).tolist(),1)
+	p=(phi[i]-pmin)/(pmax-pmin)
+	polygon([r0.tolist(),r1.tolist(),r2.tolist()],[p,0,0,1])
+\end

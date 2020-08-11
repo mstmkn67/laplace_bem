@@ -1,0 +1,54 @@
+action input:show_mesh(Mesh_id="false|true",Normal_vector="false|true",Evaluation_point="false|true") : \begin
+from numpy import *
+r=$input.vertex[].position
+for i in r:
+	point([i[0],i[1],0.0],3)
+edge=$input.edge[]
+for i in edge:
+	r0=get(getLocation("Vertex",i[1][0])+".position")
+	r1=get(getLocation("Vertex",i[1][1])+".position")
+	line([r0[0],r0[1],0.0],[r1[0],r1[1],0.0],3)
+	c=[(r0[0]+r1[0])/2.,(r0[1]+r1[1])/2.,0.0]
+	if Mesh_id=="true":
+		text(c,"%d"%i[0],[0,0,1,1,18])
+	if Normal_vector=="true":
+		n=[r1[0]-r0[0],r1[1]-r0[1]]
+		n=[n[0]/sqrt(n[0]*n[0]+n[1]*n[1]),n[1]/sqrt(n[0]*n[0]+n[1]*n[1])]
+		line(c,[c[0]-n[1],c[1]+n[0],0.0],2)
+#draw system
+r=array([[1.0,1.0,0.0],[-1.0,1.0,0.0],[-1.0,-1.0,0.0],
+         [1.0,-1.0,0.0],[1.0,1.0,0.0]])
+center=array($input.system.center+[0.0])
+size=$input.system.size
+r*=0.5*size
+p=[]
+for i in r:
+	p.append((center+i).tolist())
+polyline(p,1)
+#draw evaluation point
+if Evaluation_point=="true":
+	r=$input.evaluation_point[].position
+	for i in r:
+		point(i+[0.0],2)
+\end
+
+action input:show_region_condition():\begin
+from math import *
+rc=$input.region_condition[].edge[]
+name=$input.region_condition[].name
+type=$input.region_condition[].type
+for i in range(len(rc)):
+	tc=[0.0,0.0]
+	for j in range(len(rc[i])):
+		loc=getLocation("Edge",rc[i][j])
+		v=get(loc+".vertex[]")
+		r0=get(getLocation("Vertex",v[0])+".position")
+		r1=get(getLocation("Vertex",v[1])+".position")
+		c=[0.5*(r0[0]+r1[0]),0.5*(r0[1]+r1[1]),0.0]
+		tc[0]+=c[0]
+		tc[1]+=c[1]
+		if type[i]=="phi":
+			point(c,3)
+		elif type[i]=="q":
+			point(c,1)
+\end

@@ -1,0 +1,140 @@
+
+action output:show_cell(Line="false|edge_cell|evaluation_point_cell") :\begin
+from numpy import *
+### draw cell ###
+p=$output.cell[].position
+g=$output.cell[].generation
+s=$output.cell[].size
+maxg=max(g)
+for i in range(len(p)):
+	hs=0.5*s[i]
+	rect=array([[ hs, hs,g[i]],[-hs, hs,g[i]],
+              [-hs,-hs,g[i]],[ hs,-hs,g[i]],[ hs, hs,g[i]]])
+	c=array(p[i]+[0.0])
+	np=[]
+	for j in rect:
+		np.append(c+j)
+	polyline(array(np).tolist(),1)
+### draw family tree ###
+p=$output.cell[].position
+c=$output.cell[].child[]
+e=$output.cell[].edge[]
+g=$output.cell[].generation
+#child
+for i in range(len(c)):
+	for j in range(len(c[i])):
+		rp=$output.cell[c[i][j]].position+[g[i]+1]
+		line(p[i]+[g[i]],rp,1)
+#edge
+if Line =="edge_cell":
+	for i in range(len(e)):
+		for j in range(len(e[i])):
+			temp=e[i][j]
+			id0=$input.edge[temp].vertex[0]
+			id1=$input.edge[temp].vertex[1]
+			r0=get(getLocation("Vertex",id0)+".position")
+			r1=get(getLocation("Vertex",id1)+".position")
+			rp=[0.5*(r0[0]+r1[0]),0.5*(r0[1]+r1[1]),maxg+1]
+			line(p[i]+[g[i]],rp,2)
+#evaluation
+if Line=="evaluation_point_cell":
+	er=$input.evaluation_point[].position
+	ec=$output.evaluation_point[].cell
+	for i in range(len(er)):
+		gen=$output.cell[ec[i]].generation
+		cr=$output.cell[ec[i]].position+[gen]
+		line(er[i]+[maxg+1],cr,2)
+### draw mesh ###
+r=$input.vertex[].position
+edge=$input.edge[]
+for i in r:
+	point([i[0],i[1],maxg+1],3)
+for i in edge:
+	r0=get(getLocation("Vertex",i[1][0])+".position")
+	r1=get(getLocation("Vertex",i[1][1])+".position")
+	line([r0[0],r0[1],maxg+1],[r1[0],r1[1],maxg+1],3)
+	c=[(r0[0]+r1[0])/2.,(r0[1]+r1[1])/2.,maxg+1]
+	point(c,2)
+r=$input.evaluation_point[]
+for i in r:
+	point(i+[maxg+1],2)
+\end
+
+action output.cell[]:adjacent_interaction() : \begin
+from numpy import *
+def draw_cell(cell_list,color):
+	for i in cell_list:
+		#loc=getLocation("Cell",i)
+		#g=get(loc+".generation")
+		#rp=get(loc+".position")+[0.0]
+		#si=get(loc+".size")
+		g=$output.cell[i].generation
+		rp=$output.cell[i].position+[0.0]
+		si=$output.cell[i].size
+		hs=0.5*si
+		rect=array([[ hs, hs,g],[-hs, hs,g],
+                [-hs,-hs,g],[ hs,-hs,g],[ hs, hs,g]])
+		np=[]
+		for j in rect:
+			np.append(rp+j)
+		polygon(array(np).tolist(),color)
+##
+adja=$self.adjacent[]
+inte=$self.interaction[]
+myself=Location("self").getIndex()
+draw_cell(adja,1)
+draw_cell(inte,3)
+draw_cell(myself,2)
+print("adjacent : blue")
+print("interaction : red")
+print("myself : green")
+##
+#draw cell
+p=$output.cell[].position
+g=$output.cell[].generation
+s=$output.cell[].size
+maxg=max(g)
+for i in range(len(p)):
+	hs=0.5*s[i]
+	rect=array([[ hs, hs,g[i]],[-hs, hs,g[i]],
+              [-hs,-hs,g[i]],[ hs,-hs,g[i]],[ hs, hs,g[i]]])
+	c=array(p[i]+[0.0])
+	np=[]
+	for j in rect:
+		np.append(c+j)
+	polyline(array(np).tolist(),1)
+#draw mesh
+r=$input.vertex[].position
+edge=$input.edge[]
+for i in r:
+	point([i[0],i[1],maxg+1],3)
+for i in edge:
+	r0=get(getLocation("Vertex",i[1][0])+".position")
+	r1=get(getLocation("Vertex",i[1][1])+".position")
+	line([r0[0],r0[1],maxg+1],[r1[0],r1[1],maxg+1],3)
+	c=[(r0[0]+r1[0])/2.,(r0[1]+r1[1])/2.,maxg+1]
+	point(c,2)
+r=$input.evaluation_point[]
+for i in r:
+	point(i+[maxg+1],2)
+\end
+
+action output:show_result() : \begin
+from numpy import *
+phi=$output.edge[].phi
+q=$output.edge[].q
+edge=$input.edge[].vertex[]
+phi_min,phi_max=min(phi),max(phi)
+for i in range(len(edge)):
+	r0=get(getLocation("Vertex",edge[i][0])+".position")
+	r1=get(getLocation("Vertex",edge[i][1])+".position")
+	#show simulation result
+	c=(phi[i]-phi_min)/(phi_max-phi_min)
+	line([r0[0],r0[1],0.0],[r1[0],r1[1],0.0],[c,0,1.-c,1])
+	n0,n1=r1[0]-r0[0],r1[1]-r0[1]
+	n0/=sqrt(n0*n0+n1*n1)
+	n1/=sqrt(n0*n0+n1*n1)
+	n=[n1,-n0]
+	c0,c1=0.5*(r0[0]+r1[0]),0.5*(r0[1]+r1[1])
+	line([c0,c1,0.0],[c0+q[i]*n0,c1+q[i]*n1,0.0],1)
+\end
